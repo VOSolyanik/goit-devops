@@ -1,0 +1,12 @@
+apiVersion: v2
+name: django-app
+description: Helm chart for the Django application (lesson-7 homework)
+type: application
+version: 0.1.0
+appVersion: "latest"
+
+dependencies:
+  - name: postgresql
+    version: "16.2.5"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled

@@ -72,6 +72,9 @@ ENV/
 .dmypy.json
 dmypy.json
 
+# Binary archives (e.g. Helm chart dependencies — reproduced via `helm dependency update`)
+*.tgz
+
 # Terraform (commit .terraform.lock.hcl for consistent provider versions)
 .terraform/
 *.tfstate

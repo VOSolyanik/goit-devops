@@ -9,7 +9,7 @@ output "dynamodb_table_name" {
 }
 
 output "vpc_id" {
-  description = "Created VPC ID"
+  description = "VPC ID"
   value       = module.vpc.vpc_id
 }
 
@@ -23,17 +23,22 @@ output "private_subnet_ids" {
   value       = module.vpc.private_subnet_ids
 }
 
-output "internet_gateway_id" {
-  description = "Internet Gateway ID"
-  value       = module.vpc.internet_gateway_id
-}
-
-output "nat_gateway_id" {
-  description = "NAT Gateway ID"
-  value       = module.vpc.nat_gateway_id
-}
-
 output "ecr_repository_url" {
   description = "ECR repository URL"
   value       = module.ecr.repository_url
+}
+
+output "eks_cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.eks_cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS API server endpoint"
+  value       = module.eks.eks_cluster_endpoint
+}
+
+output "eks_configure_kubeconfig" {
+  description = "Run this command to configure kubectl"
+  value       = module.eks.eks_configure_kubeconfig
 }
