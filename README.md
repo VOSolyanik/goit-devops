@@ -1,24 +1,31 @@
-# Homework: Docker
+# Homework: IaC (Terraform)
 
-This project includes a Dockerized Django app with PostgreSQL and Nginx.
+This repository branch contains lesson-5 homework for AWS Infrastructure as Code with Terraform.
 
-## Services
+## What is included
 
-- `web`: Django application running on port 8000 inside the container.
-- `db`: PostgreSQL database.
-- `nginx`: Reverse proxy on port 80.
+- Remote Terraform state backend in S3 with DynamoDB locking.
+- AWS VPC with public/private subnets, IGW, NAT, and routing.
+- AWS ECR repository with scan-on-push.
+
+## Main documentation
+
+Detailed implementation notes, module breakdown, execution flow, and troubleshooting are in:
+
+- [lesson-5/README.md](lesson-5/README.md)
 
 ## Quick start
 
 ```bash
-docker-compose up -d
+cd lesson-5
+terraform init
+terraform plan
+terraform apply
 ```
 
-Then open: http://localhost
+## Cleanup
 
-## Project layout
-
-- `Dockerfile` builds the Django service image.
-- `docker-compose.yml` defines `web`, `db`, and `nginx`.
-- `nginx/nginx.conf` proxies traffic to the Django service.
-- `config/` contains the Django settings and URLs.
+```bash
+cd lesson-5
+terraform destroy
+```
