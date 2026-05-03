@@ -34,10 +34,6 @@ spec:
     }
   }
 
-  options {
-    timestamps()
-  }
-
   parameters {
     string(
       name: 'GIT_PUSH_BRANCH',
