@@ -11,4 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 RUN chmod +x /app/entrypoint.sh
 
+RUN useradd --no-create-home --shell /bin/false appuser
+USER appuser
+
 EXPOSE 8000
