@@ -166,8 +166,10 @@ aws secretsmanager get-secret-value --secret-id jenkins/admin \
 - Branch: lesson-8-9
 - Script path: Jenkinsfile
 
-5. Run the job. Expect stages:
-Checkout -> Build & Push Docker Image -> Update Chart Tag in Git
+5. Click **Build Now** — the first run will fail immediately (Jenkins loads pipeline parameters from the Jenkinsfile on first run). After it completes, click **Build with Parameters** and run again with defaults.
+
+6. Expect stages:
+`Checkout` → `Resolve ECR coordinates` → `Build and push image (Kaniko)` → `Bump Helm values and push`
 
 ## Argo CD: Verify Sync
 
@@ -192,3 +194,32 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 ```bash
 terraform destroy
 ```
+
+---
+
+## Known Pitfalls
+
+### EKS node count
+The default node group has `desired_size=1`. Running both Jenkins and Argo CD on a single `t3.small` node causes OOM evictions. Scale to at least 2 nodes before applying:
+
+```bash
+aws eks update-nodegroup-config \
+  --cluster-name lesson-8-9-eks \
+  --nodegroup-name lesson-8-9-eks-nodes \
+  --scaling-config minSize=1,maxSize=2,desiredSize=2 \
+  --region us-east-1
+```
+
+Or simply run `terraform apply` — the EKS Cluster Autoscaler is not deployed, but the node group max is 2 so manual scaling is the workaround.
+
+### EKS token expiry during long `terraform apply`
+EKS authentication tokens expire after ~15 minutes. If `terraform apply` takes longer (e.g., waiting for LoadBalancer provisioning), the Kubernetes provider will fail with a credentials error. Re-run `terraform apply` — it will pick up a fresh token and complete.
+
+### Jenkins first build loads parameters — always fails
+The first "Build Now" on a new Pipeline-from-SCM job fails immediately. This is expected: Jenkins reads the `parameters {}` block from the Jenkinsfile and registers them. Use **Build with Parameters** from the second run onward.
+
+### Argo CD repo-server OOMKill
+The default `384Mi` memory limit on the repo-server is too low for cloning a repo that contains Terraform files and rendering a Helm chart. The values.yaml in this repo sets `768Mi` to avoid OOMKills. If you see repeated restarts of `argo-cd-argocd-repo-server`, increase the limit further.
+
+### ELB DNS propagation delay
+After `terraform apply` or after Argo CD deploys the `django-app` Service, the Classic ELB DNS name takes **3–5 minutes** to resolve globally. `ERR_NAME_NOT_RESOLVED` in the browser immediately after deployment is normal — wait a few minutes and retry.
