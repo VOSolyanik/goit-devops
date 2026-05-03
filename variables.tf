@@ -19,13 +19,7 @@ variable "gitops_chart_path" {
 variable "gitops_target_revision" {
   description = "Git revision (branch or tag) for Argo CD to track"
   type        = string
-  default     = "lesson-10"
-}
-
-variable "rds_master_password" {
-  description = "Master password for RDS/Aurora (pass via -var or TF_VAR_rds_master_password; never commit)"
-  type        = string
-  sensitive   = true
+  default     = "final-project"
 }
 
 variable "rds_db_name" {
@@ -44,4 +38,16 @@ variable "rds_use_aurora" {
   description = "true = Aurora cluster + writer + reader, false = single RDS instance"
   type        = bool
   default     = false
+}
+
+variable "rds_secret_name" {
+  description = "AWS Secrets Manager secret ID for RDS master password. Must contain JSON: {\"password\":\"...\"}"
+  type        = string
+  default     = "rds/master"
+}
+
+variable "grafana_secret_name" {
+  description = "AWS Secrets Manager secret ID for Grafana admin password. Must contain JSON: {\"password\":\"...\"}"
+  type        = string
+  default     = "grafana/admin"
 }

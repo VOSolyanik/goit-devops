@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "goit-devops-lesson-8-9-tfstate-451790114144"
-    key            = "lesson-8-9/terraform.tfstate"
+    bucket         = "goit-devops-final-project-tfstate-451790114144"
+    key            = "final-project/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "terraform-locks-8-9"
+    dynamodb_table = "terraform-locks-final-project"
     encrypt        = true
   }
 }

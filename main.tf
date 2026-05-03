@@ -37,6 +37,14 @@ data "aws_eks_cluster_auth" "main" {
   depends_on = [module.eks]
 }
 
+data "aws_secretsmanager_secret_version" "rds" {
+  secret_id = var.rds_secret_name
+}
+
+data "aws_secretsmanager_secret_version" "grafana" {
+  secret_id = var.grafana_secret_name
+}
+
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.main.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.main.certificate_authority[0].data)
@@ -53,15 +61,15 @@ provider "helm" {
 
 locals {
   common_tags = {
-    Project = "goit-devops-lesson-8-9"
+    Project = "goit-devops-final-project"
     Managed = "terraform"
   }
 }
 
 module "s3_backend" {
   source      = "./modules/s3-backend"
-  bucket_name = "goit-devops-lesson-8-9-tfstate-451790114144"
-  table_name  = "terraform-locks-8-9"
+  bucket_name = "goit-devops-final-project-tfstate-451790114144"
+  table_name  = "terraform-locks-final-project"
   tags        = local.common_tags
 }
 
@@ -71,20 +79,20 @@ module "vpc" {
   public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
   availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  vpc_name           = "lesson-8-9-vpc"
+  vpc_name           = "devops-final-project-vpc"
   tags               = local.common_tags
 }
 
 module "ecr" {
   source       = "./modules/ecr"
-  ecr_name     = "lesson-8-9-ecr"
+  ecr_name     = "devops-final-project-ecr"
   scan_on_push = true
   tags         = local.common_tags
 }
 
 module "eks" {
   source              = "./modules/eks"
-  cluster_name        = "lesson-8-9-eks"
+  cluster_name        = "devops-final-project-eks"
   cluster_version     = "1.32"
   public_subnet_ids   = module.vpc.public_subnet_ids
   private_subnet_ids  = module.vpc.private_subnet_ids
@@ -127,7 +135,7 @@ module "argo_cd" {
 module "rds" {
   source = "./modules/rds"
 
-  name                          = "lesson-10-db"
+  name                          = "devops-final-project-db"
   use_aurora                    = var.rds_use_aurora
   engine                        = "postgres"
   engine_version                = "17.2"
@@ -141,7 +149,7 @@ module "rds" {
   allocated_storage       = 20
   db_name                 = var.rds_db_name
   username                = var.rds_username
-  password                = var.rds_master_password
+  password                = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)["password"]
   subnet_private_ids      = module.vpc.private_subnet_ids
   subnet_public_ids       = module.vpc.public_subnet_ids
   publicly_accessible     = false
@@ -152,4 +160,18 @@ module "rds" {
   tags = local.common_tags
 
   depends_on = [module.vpc]
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  namespace              = "monitoring"
+  grafana_admin_password = jsondecode(data.aws_secretsmanager_secret_version.grafana.secret_string)["password"]
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [module.eks]
 }

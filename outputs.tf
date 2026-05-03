@@ -92,3 +92,18 @@ output "rds_security_group_id" {
   description = "Security group ID attached to the database"
   value       = module.rds.security_group_id
 }
+
+output "monitoring_namespace" {
+  description = "Namespace where Prometheus and Grafana are deployed"
+  value       = module.monitoring.monitoring_namespace
+}
+
+output "grafana_port_forward_command" {
+  description = "Command to access Grafana at http://localhost:3000"
+  value       = module.monitoring.grafana_port_forward_command
+}
+
+output "prometheus_port_forward_command" {
+  description = "Command to access Prometheus at http://localhost:9090"
+  value       = module.monitoring.prometheus_port_forward_command
+}

@@ -31,7 +31,7 @@ resource "aws_subnet" "public" {
 
   # k8s subnet tags are managed externally by aws_ec2_tag in the EKS module
   lifecycle {
-    ignore_changes = [tags["kubernetes.io/cluster/lesson-8-9-eks"], tags["kubernetes.io/role/elb"]]
+    ignore_changes = [tags["kubernetes.io/cluster/devops-final-project-eks"], tags["kubernetes.io/role/elb"]]
   }
 }
 
@@ -49,7 +49,7 @@ resource "aws_subnet" "private" {
 
   # k8s subnet tags are managed externally by aws_ec2_tag in the EKS module
   lifecycle {
-    ignore_changes = [tags["kubernetes.io/cluster/lesson-8-9-eks"], tags["kubernetes.io/role/internal-elb"]]
+    ignore_changes = [tags["kubernetes.io/cluster/devops-final-project-eks"], tags["kubernetes.io/role/internal-elb"]]
   }
 }
 

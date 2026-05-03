@@ -1,5 +1,5 @@
 image:
-  repository: "451790114144.dkr.ecr.us-east-1.amazonaws.com/lesson-8-9-ecr"
+  repository: "451790114144.dkr.ecr.us-east-1.amazonaws.com/devops-final-project-ecr"
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -30,7 +30,7 @@ autoscaling:
   maxReplicas: 6
   targetCPUUtilizationPercentage: 70
 
-# ConfigMap: env vars from lesson-4 (.env)
+# ConfigMap: env vars for Django
 config:
   DJANGO_DEBUG: "0"
   DJANGO_ALLOWED_HOSTS: "*"

@@ -29,6 +29,18 @@ spec:
         - sleep
       args:
         - 99d
+    - name: trivy
+      image: aquasec/trivy:latest
+      command:
+        - sleep
+      args:
+        - 99d
+    - name: bandit
+      image: python:3.12-slim
+      command:
+        - sleep
+      args:
+        - 99d
   restartPolicy: Never
 """
     }
@@ -76,6 +88,40 @@ spec:
       steps {
         container('git') {
           checkout scm
+        }
+      }
+    }
+
+    stage('SAST: Bandit (Python)') {
+      steps {
+        container('bandit') {
+          sh '''
+            pip install --quiet bandit
+            bandit -r "${WORKSPACE}/${DOCKER_CONTEXT}" \
+              --severity-level medium \
+              --exit-zero \
+              -f txt
+          '''
+        }
+      }
+    }
+
+    stage('Security scan: Trivy') {
+      steps {
+        container('trivy') {
+          sh '''
+            trivy fs \
+              --exit-code 0 \
+              --severity HIGH,CRITICAL \
+              --no-progress \
+              "${WORKSPACE}/${DOCKER_CONTEXT}"
+
+            trivy config \
+              --exit-code 0 \
+              --severity HIGH,CRITICAL \
+              --no-progress \
+              "${WORKSPACE}"
+          '''
         }
       }
     }
