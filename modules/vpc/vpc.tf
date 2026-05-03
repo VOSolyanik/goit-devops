@@ -28,6 +28,11 @@ resource "aws_subnet" "public" {
     Name = "${var.vpc_name}-public-${count.index + 1}"
     Tier = "public"
   })
+
+  # k8s subnet tags are managed externally by aws_ec2_tag in the EKS module
+  lifecycle {
+    ignore_changes = [tags["kubernetes.io/cluster/lesson-8-9-eks"], tags["kubernetes.io/role/elb"]]
+  }
 }
 
 resource "aws_subnet" "private" {
@@ -41,6 +46,11 @@ resource "aws_subnet" "private" {
     Name = "${var.vpc_name}-private-${count.index + 1}"
     Tier = "private"
   })
+
+  # k8s subnet tags are managed externally by aws_ec2_tag in the EKS module
+  lifecycle {
+    ignore_changes = [tags["kubernetes.io/cluster/lesson-8-9-eks"], tags["kubernetes.io/role/internal-elb"]]
+  }
 }
 
 resource "aws_eip" "nat" {

@@ -42,3 +42,28 @@ output "eks_configure_kubeconfig" {
   description = "Run this command to configure kubectl"
   value       = module.eks.eks_configure_kubeconfig
 }
+
+output "eks_ebs_csi_addon_version" {
+  description = "Installed aws-ebs-csi-driver addon version"
+  value       = module.eks.ebs_csi_addon_version
+}
+
+output "jenkins_namespace" {
+  description = "Namespace where Jenkins is deployed"
+  value       = module.jenkins.jenkins_namespace
+}
+
+output "jenkins_release_name" {
+  description = "Helm release name for Jenkins"
+  value       = module.jenkins.jenkins_release_name
+}
+
+output "argo_cd_namespace" {
+  description = "Namespace where Argo CD is deployed"
+  value       = module.argo_cd.argo_cd_namespace
+}
+
+output "argo_cd_admin_password_command" {
+  description = "Command to fetch the initial Argo CD admin password"
+  value       = module.argo_cd.argo_cd_admin_password_command
+}

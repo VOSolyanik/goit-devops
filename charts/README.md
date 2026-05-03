@@ -1,4 +1,4 @@
-# Helm Charts — Lesson 7
+# Helm Charts
 
 Two charts for deploying the Django application to EKS.
 
@@ -43,7 +43,7 @@ helm upgrade --install metrics-server charts/metrics-server -n kube-system
 
 # 2. Django app
 # Update image.repository in charts/django-app/values.yaml with your ECR URL:
-#   terraform -chdir=terraform output -raw ecr_repository_url
+#   terraform output -raw ecr_repository_url
 helm dependency update charts/django-app
 helm upgrade --install django-app charts/django-app
 ```

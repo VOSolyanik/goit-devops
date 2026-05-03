@@ -1,6 +1,6 @@
 apiVersion: v2
 name: django-app
-description: Helm chart for the Django application (lesson-7 homework)
+description: Helm chart for the Django application (lesson-8-9 homework)
 type: application
 version: 0.1.0
 appVersion: "latest"
