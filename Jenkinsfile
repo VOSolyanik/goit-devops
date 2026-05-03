@@ -125,6 +125,7 @@ spec:
             ]) {
               sh '''
                 set -e
+                git config --global --add safe.directory '*'
 
                 if [ -n "${HELM_VALUES_REPO_URL}" ]; then
                   CLONE_DIR="/tmp/helm-values-${BUILD_NUMBER}"
