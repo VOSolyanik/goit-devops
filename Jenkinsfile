@@ -64,7 +64,7 @@ spec:
     )
     string(
       name: 'ECR_REPOSITORY_NAME',
-      defaultValue: 'lesson-8-9-ecr',
+      defaultValue: 'devops-final-project-ecr',
       description: 'ECR repository name (Terraform ecr_name).'
     )
     string(

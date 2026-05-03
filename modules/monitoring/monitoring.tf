@@ -11,6 +11,7 @@ resource "helm_release" "prometheus" {
   chart            = "prometheus"
   version          = var.prometheus_chart_version
   create_namespace = false
+  timeout          = 900
 
   set {
     name  = "server.resources.requests.cpu"
@@ -47,6 +48,7 @@ resource "helm_release" "grafana" {
   chart            = "grafana"
   version          = var.grafana_chart_version
   create_namespace = false
+  timeout          = 900
 
   set_sensitive {
     name  = "adminPassword"
