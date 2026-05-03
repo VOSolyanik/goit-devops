@@ -102,13 +102,31 @@ module "rds" {
 
 ### Module Variables
 
-The module accepts (see full details in [`modules/rds/variables.tf`](modules/rds/variables.tf)):
-
-- **`use_aurora`**: `true/false` — switches Aurora vs standard RDS
-- **RDS-only**: `engine`, `engine_version`, `parameter_group_family_rds`, `allocated_storage`, `multi_az`
-- **Aurora-only**: `engine_cluster`, `engine_version_cluster`, `parameter_group_family_aurora`, `aurora_replica_count`
-- **Network**: `vpc_id`, `subnet_private_ids`, `subnet_public_ids`, `publicly_accessible`
-- **Common**: `name`, `instance_class`, `db_name`, `username`, `password`, `backup_retention_period`, `parameters`, `tags`
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `name` | `string` | — | Name prefix for all resources |
+| `use_aurora` | `bool` | `false` | `true` → Aurora cluster; `false` → single RDS instance |
+| `engine` | `string` | `"postgres"` | RDS engine (e.g. `postgres`, `mysql`) |
+| `engine_version` | `string` | `"17.2"` | RDS engine version |
+| `parameter_group_family_rds` | `string` | `"postgres17"` | Parameter group family matching engine major version |
+| `engine_cluster` | `string` | `"aurora-postgresql"` | Aurora engine type |
+| `engine_version_cluster` | `string` | `"15.3"` | Aurora engine version |
+| `parameter_group_family_aurora` | `string` | `"aurora-postgresql15"` | Aurora parameter group family |
+| `aurora_replica_count` | `number` | `1` | Number of Aurora read replicas |
+| `instance_class` | `string` | `"db.t3.micro"` | DB instance class for RDS and Aurora instances |
+| `allocated_storage` | `number` | `20` | Storage in GB (RDS only) |
+| `db_name` | `string` | — | Initial database name |
+| `username` | `string` | — | Master username |
+| `password` | `string` | — | Master password (sensitive) |
+| `vpc_id` | `string` | — | VPC ID where the database is deployed |
+| `subnet_private_ids` | `list(string)` | — | Private subnet IDs for the DB subnet group |
+| `subnet_public_ids` | `list(string)` | — | Public subnet IDs used when `publicly_accessible = true` |
+| `publicly_accessible` | `bool` | `false` | Expose the database endpoint publicly |
+| `multi_az` | `bool` | `false` | Enable Multi-AZ (RDS only; ignored for Aurora) |
+| `backup_retention_period` | `number` | `0` | Backup retention days (Aurora enforces minimum 1) |
+| `db_port` | `number` | `5432` | Port in SG ingress rule (PostgreSQL: 5432, MySQL: 3306) |
+| `parameters` | `map(string)` | see vars | Engine parameters applied via parameter group |
+| `tags` | `map(string)` | `{}` | Tags applied to all resources |
 
 ### How to Change DB Type / Engine / Instance Class
 

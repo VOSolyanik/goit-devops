@@ -10,13 +10,15 @@ variable "use_aurora" {
 }
 
 variable "engine" {
-  type    = string
-  default = "postgres"
+  description = "RDS engine (e.g. postgres, mysql)"
+  type        = string
+  default     = "postgres"
 }
 
 variable "engine_version" {
-  type    = string
-  default = "17.2"
+  description = "RDS engine version (e.g. 17.2 for PostgreSQL)"
+  type        = string
+  default     = "17.2"
 }
 
 variable "parameter_group_family_rds" {
@@ -26,18 +28,21 @@ variable "parameter_group_family_rds" {
 }
 
 variable "engine_cluster" {
-  type    = string
-  default = "aurora-postgresql"
+  description = "Aurora engine type (e.g. aurora-postgresql, aurora-mysql)"
+  type        = string
+  default     = "aurora-postgresql"
 }
 
 variable "engine_version_cluster" {
-  type    = string
-  default = "15.3"
+  description = "Aurora engine version (e.g. 15.3 for aurora-postgresql)"
+  type        = string
+  default     = "15.3"
 }
 
 variable "parameter_group_family_aurora" {
-  type    = string
-  default = "aurora-postgresql15"
+  description = "Aurora parameter group family matching engine_version_cluster (e.g. aurora-postgresql15)"
+  type        = string
+  default     = "aurora-postgresql15"
 }
 
 variable "aurora_replica_count" {
@@ -47,8 +52,9 @@ variable "aurora_replica_count" {
 }
 
 variable "instance_class" {
-  type    = string
-  default = "db.t3.micro"
+  description = "DB instance class for both RDS and Aurora instances (e.g. db.t3.micro)"
+  type        = string
+  default     = "db.t3.micro"
 }
 
 variable "allocated_storage" {
@@ -58,33 +64,40 @@ variable "allocated_storage" {
 }
 
 variable "db_name" {
-  type = string
+  description = "Name of the initial database to create"
+  type        = string
 }
 
 variable "username" {
-  type = string
+  description = "Master username for the database"
+  type        = string
 }
 
 variable "password" {
-  type      = string
-  sensitive = true
+  description = "Master password for the database (sensitive)"
+  type        = string
+  sensitive   = true
 }
 
 variable "vpc_id" {
-  type = string
+  description = "ID of the VPC where the database will be deployed"
+  type        = string
 }
 
 variable "subnet_private_ids" {
-  type = list(string)
+  description = "List of private subnet IDs for the DB subnet group"
+  type        = list(string)
 }
 
 variable "subnet_public_ids" {
-  type = list(string)
+  description = "List of public subnet IDs used when publicly_accessible = true"
+  type        = list(string)
 }
 
 variable "publicly_accessible" {
-  type    = bool
-  default = false
+  description = "Whether the database endpoint should be publicly accessible"
+  type        = bool
+  default     = false
 }
 
 variable "multi_az" {
@@ -99,8 +112,15 @@ variable "backup_retention_period" {
   default     = 0
 }
 
+variable "db_port" {
+  description = "Port the database listens on; used in the security group ingress rule (PostgreSQL: 5432, MySQL: 3306)"
+  type        = number
+  default     = 5432
+}
+
 variable "parameters" {
-  type = map(string)
+  description = "Map of database engine parameters to apply via the parameter group"
+  type        = map(string)
   default = {
     max_connections = "200"
     log_statement   = "none"
@@ -109,6 +129,7 @@ variable "parameters" {
 }
 
 variable "tags" {
-  type    = map(string)
-  default = {}
+  description = "Map of tags to apply to all resources in this module"
+  type        = map(string)
+  default     = {}
 }
