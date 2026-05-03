@@ -119,7 +119,6 @@ spec:
             trivy config \
               --exit-code 0 \
               --severity HIGH,CRITICAL \
-              --no-progress \
               "${WORKSPACE}"
           '''
         }
