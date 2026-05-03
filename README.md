@@ -1,19 +1,20 @@
-# Homework: CI/CD with Jenkins + Argo CD (Lessons 8-9)
+# Homework: DB Administration with Terraform RDS Module (Lesson 10)
 
-This branch provisions a full CI/CD pipeline on EKS using Terraform, Jenkins, and Argo CD:
+This branch extends the CI/CD infrastructure from lesson-8-9 with a managed database layer:
 
-1. Jenkins builds a Docker image and pushes to ECR.
-2. Jenkins updates `charts/django-app/values.yaml` with the new image tag and pushes to Git.
-3. Argo CD watches the repo and syncs the application to the cluster automatically.
+1. A reusable `modules/rds/` Terraform module provisions either a standard PostgreSQL RDS instance or an Aurora cluster (writer + readers).
+2. Toggle between the two deployment modes with a single variable (`rds_use_aurora`).
+3. The module wires into the existing VPC (private subnets, no public exposure).
 
-> Cost note: Jenkins and Argo CD are exposed via LoadBalancer services and incur AWS charges. Run `terraform destroy` after verification.
+> Cost note: RDS `db.t3.micro` is free-tier eligible. Aurora is **not** free-tier — destroy after verification with `terraform destroy`.
 
 ## What is included
 
-- Terraform modules: S3/DynamoDB remote state backend, VPC, ECR, EKS cluster, EBS CSI driver, Jenkins, Argo CD
+- Terraform modules: S3/DynamoDB remote state backend, VPC, ECR, EKS cluster, EBS CSI driver, Jenkins, Argo CD, **RDS**
+- `modules/rds/`: standard RDS instance (`rds.tf`), Aurora cluster (`aurora.tf`), shared subnet group + SG (`shared.tf`)
 - Helm chart `django-app`: Django deployment (ECR image), PostgreSQL, ConfigMap, Service (LoadBalancer), HPA
 - `Jenkinsfile`: Kaniko build → ECR push → Helm values Git commit
-- Argo CD Application: auto-syncs `charts/django-app` from the `lesson-8-9` branch
+- Argo CD Application: auto-syncs `charts/django-app` from the `lesson-10` branch
 
 ## CI/CD Flow Diagram
 
@@ -70,8 +71,18 @@ terraform apply -var="jenkins_admin_secret_name=myapp/jenkins/admin"
 terraform init -backend=false -reconfigure
 terraform apply -target=module.s3_backend   # creates S3 + DynamoDB
 terraform init -migrate-state               # migrates local state → S3
-terraform apply                             # creates VPC, ECR, EKS, Jenkins, Argo CD (~20 min)
+terraform apply -var="rds_master_password=<STRONG_PASSWORD>"   # creates VPC, ECR, EKS, Jenkins, Argo CD, RDS (~20 min)
 ```
+
+To deploy Aurora instead of standard RDS:
+
+```bash
+terraform apply \
+  -var="rds_master_password=<STRONG_PASSWORD>" \
+  -var="rds_use_aurora=true"
+```
+
+> **Cost warning:** Aurora `db.t3.micro` is ~$0.073/hr per instance. With 1 writer + 1 reader that is ~$0.15/hr. Run `terraform destroy` after verification.
 
 Configure kubectl:
 
@@ -137,10 +148,33 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 kubectl get svc django-app-django   # EXTERNAL-IP = ELB DNS
 ```
 
+## RDS: Verify Database
+
+1. Get the RDS endpoint after `terraform apply`:
+
+```bash
+terraform output rds_standard_endpoint   # standard RDS
+terraform output rds_aurora_writer_endpoint  # Aurora writer (if rds_use_aurora=true)
+terraform output rds_aurora_reader_endpoint  # Aurora reader (if rds_use_aurora=true)
+```
+
+2. Connect from inside the cluster (requires `psql` pod):
+
+```bash
+kubectl run psql --rm -it --image=postgres:17-alpine --restart=Never -- \
+  psql -h $(terraform output -raw rds_standard_endpoint) -U postgres -d appdb
+```
+
+3. Security group ID:
+
+```bash
+terraform output rds_security_group_id
+```
+
 ## Cleanup
 
 ```bash
-terraform destroy
+terraform destroy -var="rds_master_password=<STRONG_PASSWORD>"
 ```
 
 ---

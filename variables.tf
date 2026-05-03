@@ -19,5 +19,29 @@ variable "gitops_chart_path" {
 variable "gitops_target_revision" {
   description = "Git revision (branch or tag) for Argo CD to track"
   type        = string
-  default     = "lesson-8-9"
+  default     = "lesson-10"
+}
+
+variable "rds_master_password" {
+  description = "Master password for RDS/Aurora (pass via -var or TF_VAR_rds_master_password; never commit)"
+  type        = string
+  sensitive   = true
+}
+
+variable "rds_db_name" {
+  description = "Initial database name"
+  type        = string
+  default     = "appdb"
+}
+
+variable "rds_username" {
+  description = "Master username for the database"
+  type        = string
+  default     = "postgres"
+}
+
+variable "rds_use_aurora" {
+  description = "true = Aurora cluster + writer + reader, false = single RDS instance"
+  type        = bool
+  default     = false
 }

@@ -123,3 +123,33 @@ module "argo_cd" {
     kubernetes = kubernetes
   }
 }
+
+module "rds" {
+  source = "./modules/rds"
+
+  name                          = "lesson-10-db"
+  use_aurora                    = var.rds_use_aurora
+  engine                        = "postgres"
+  engine_version                = "17.2"
+  parameter_group_family_rds    = "postgres17"
+  engine_cluster                = "aurora-postgresql"
+  engine_version_cluster        = "15.3"
+  parameter_group_family_aurora = "aurora-postgresql15"
+  aurora_replica_count          = 1
+
+  instance_class          = "db.t3.micro"
+  allocated_storage       = 20
+  db_name                 = var.rds_db_name
+  username                = var.rds_username
+  password                = var.rds_master_password
+  subnet_private_ids      = module.vpc.private_subnet_ids
+  subnet_public_ids       = module.vpc.public_subnet_ids
+  publicly_accessible     = false
+  vpc_id                  = module.vpc.vpc_id
+  multi_az                = false
+  backup_retention_period = 0
+
+  tags = local.common_tags
+
+  depends_on = [module.vpc]
+}
