@@ -41,7 +41,7 @@ spec:
   parameters {
     string(
       name: 'GIT_PUSH_BRANCH',
-      defaultValue: 'main',
+      defaultValue: 'lesson-8-9',
       description: 'Branch to push updated Helm values.'
     )
     string(
