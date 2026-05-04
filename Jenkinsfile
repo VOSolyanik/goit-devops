@@ -24,13 +24,13 @@ spec:
       args:
         - 99d
     - name: git
-      image: alpine/git:latest
+      image: alpine/git:2.43.0
       command:
         - sleep
       args:
         - 99d
     - name: trivy
-      image: aquasec/trivy:latest
+      image: aquasec/trivy:0.58.1
       command:
         - sleep
       args:
@@ -111,14 +111,14 @@ spec:
         container('trivy') {
           sh '''
             trivy fs \
-              --exit-code 0 \
-              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              --severity CRITICAL \
               --no-progress \
               "${WORKSPACE}/${DOCKER_CONTEXT}"
 
             trivy config \
-              --exit-code 0 \
-              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              --severity CRITICAL \
               "${WORKSPACE}"
           '''
         }
@@ -151,6 +151,20 @@ spec:
               --dockerfile="${WORKSPACE}/${DOCKER_CONTEXT}/Dockerfile" \
               --destination="${IMAGE_REPOSITORY}:${IMAGE_TAG}" \
               --cache=true
+          '''
+        }
+      }
+    }
+
+    stage('Trivy: image scan') {
+      steps {
+        container('trivy') {
+          sh '''
+            trivy image \
+              --exit-code 1 \
+              --severity CRITICAL \
+              --no-progress \
+              "${IMAGE_REPOSITORY}:${IMAGE_TAG}"
           '''
         }
       }

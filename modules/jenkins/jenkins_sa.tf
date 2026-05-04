@@ -19,6 +19,7 @@ resource "aws_iam_role" "jenkins_kaniko_role" {
         Condition = {
           StringEquals = {
             "${replace(var.oidc_provider_url, "https://", "")}:sub" = "system:serviceaccount:${var.namespace}:${var.service_account_name}"
+            "${replace(var.oidc_provider_url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
       }

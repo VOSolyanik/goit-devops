@@ -128,6 +128,11 @@ variable "parameters" {
   }
 }
 
+variable "vpc_cidr" {
+  description = "VPC CIDR block — restricts RDS security group ingress to internal traffic only"
+  type        = string
+}
+
 variable "tags" {
   description = "Map of tags to apply to all resources in this module"
   type        = map(string)

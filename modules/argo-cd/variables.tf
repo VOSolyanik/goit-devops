@@ -42,11 +42,36 @@ variable "application_name" {
 variable "application_namespace" {
   description = "Kubernetes namespace for the application"
   type        = string
-  default     = "default"
+  default     = "django-app"
 }
 
 variable "project" {
   description = "Argo CD project name"
   type        = string
   default     = "default"
+}
+
+variable "rds_endpoint" {
+  description = "RDS hostname passed to django-app as POSTGRES_HOST"
+  type        = string
+  default     = ""
+}
+
+variable "rds_username" {
+  description = "RDS master username passed to django-app"
+  type        = string
+  default     = "postgres"
+}
+
+variable "rds_db_name" {
+  description = "RDS database name passed to django-app"
+  type        = string
+  default     = "appdb"
+}
+
+variable "rds_password" {
+  description = "RDS master password passed to django-app (sensitive)"
+  type        = string
+  sensitive   = true
+  default     = ""
 }

@@ -40,19 +40,6 @@ config:
   POSTGRES_DB: django_db
 
 secrets:
-  djangoSecretKey: "change-me-in-production"
-  postgresPassword: "change-me-in-production"
+  djangoSecretKey: ""
+  postgresPassword: ""
 
-# PostgreSQL — official postgres:17 image (no Bitnami subchart)
-postgresql:
-  enabled: false
-
-postgres:
-  image: postgres:17-alpine
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 250m
-      memory: 384Mi

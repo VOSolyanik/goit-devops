@@ -14,12 +14,20 @@ spec:
       labels:
         app: {{ .Release.Name }}-django
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: django
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/app/entrypoint.sh"]
-          args: ["python", "manage.py", "runserver", "0.0.0.0:{{ .Values.service.port }}"]
+          args: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:{{ .Values.service.port }}", "--workers", "2"]
           ports:
             - containerPort: {{ .Values.service.port }}
           envFrom:
@@ -36,5 +44,19 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-secret
                   key: POSTGRES_PASSWORD
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

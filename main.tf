@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.6.0"
+  required_version = ">= 1.10.0"
 
   required_providers {
     aws = {
@@ -69,7 +69,6 @@ locals {
 module "s3_backend" {
   source      = "./modules/s3-backend"
   bucket_name = "goit-devops-final-project-tfstate-451790114144"
-  table_name  = "terraform-locks-final-project"
   tags        = local.common_tags
 }
 
@@ -119,17 +118,24 @@ module "jenkins" {
 }
 
 module "argo_cd" {
-  source                = "./modules/argo-cd"
-  namespace             = "argocd"
-  chart_version         = "5.46.4"
-  gitops_repo_url       = var.gitops_repo_url
-  gitops_chart_path     = var.gitops_chart_path
+  source                 = "./modules/argo-cd"
+  namespace              = "argocd"
+  chart_version          = "5.46.4"
+  gitops_repo_url        = var.gitops_repo_url
+  gitops_chart_path      = var.gitops_chart_path
   gitops_target_revision = var.gitops_target_revision
+
+  rds_endpoint = module.rds.standard_endpoint
+  rds_username = var.rds_username
+  rds_db_name  = var.rds_db_name
+  rds_password = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)["password"]
 
   providers = {
     helm       = helm
     kubernetes = kubernetes
   }
+
+  depends_on = [module.rds]
 }
 
 module "rds" {
@@ -154,6 +160,7 @@ module "rds" {
   subnet_public_ids       = module.vpc.public_subnet_ids
   publicly_accessible     = false
   vpc_id                  = module.vpc.vpc_id
+  vpc_cidr                = module.vpc.vpc_cidr
   multi_az                = false
   backup_retention_period = 0
 
@@ -169,8 +176,7 @@ module "monitoring" {
   grafana_admin_password = jsondecode(data.aws_secretsmanager_secret_version.grafana.secret_string)["password"]
 
   providers = {
-    helm       = helm
-    kubernetes = kubernetes
+    helm = helm
   }
 
   depends_on = [module.eks]
