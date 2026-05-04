@@ -4,6 +4,18 @@ variable "namespace" {
   default     = "monitoring"
 }
 
+variable "prometheus_release_name" {
+  description = "Helm release name for Prometheus"
+  type        = string
+  default     = "prometheus"
+}
+
+variable "grafana_release_name" {
+  description = "Helm release name for Grafana"
+  type        = string
+  default     = "grafana"
+}
+
 variable "prometheus_chart_version" {
   description = "Helm chart version for prometheus-community/prometheus"
   type        = string

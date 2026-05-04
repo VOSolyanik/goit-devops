@@ -32,6 +32,16 @@ resource "helm_release" "argo_apps" {
             targetRevision = var.gitops_target_revision
             helm = {
               valueFiles = ["values.yaml"]
+              values = yamlencode({
+                config = {
+                  POSTGRES_HOST = var.rds_endpoint
+                  POSTGRES_USER = var.rds_username
+                  POSTGRES_DB   = var.rds_db_name
+                }
+                secrets = {
+                  postgresPassword = var.rds_password
+                }
+              })
             }
           }
           destination = {

@@ -3,10 +3,6 @@ output "s3_bucket_url" {
   value       = module.s3_backend.s3_bucket_url
 }
 
-output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locks"
-  value       = module.s3_backend.dynamodb_table_name
-}
 
 output "vpc_id" {
   description = "VPC ID"
@@ -106,4 +102,19 @@ output "grafana_port_forward_command" {
 output "prometheus_port_forward_command" {
   description = "Command to access Prometheus at http://localhost:9090"
   value       = module.monitoring.prometheus_port_forward_command
+}
+
+output "grafana_admin_password_command" {
+  description = "Command to retrieve the Grafana admin password from Kubernetes"
+  value       = module.monitoring.grafana_admin_password_command
+}
+
+output "prometheus_release_name" {
+  description = "Helm release name for Prometheus"
+  value       = module.monitoring.prometheus_release_name
+}
+
+output "grafana_release_name" {
+  description = "Helm release name for Grafana"
+  value       = module.monitoring.grafana_release_name
 }

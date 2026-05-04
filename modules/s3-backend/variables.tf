@@ -3,12 +3,6 @@ variable "bucket_name" {
   type        = string
 }
 
-variable "table_name" {
-  description = "DynamoDB table name for Terraform state lock"
-  type        = string
-  default     = "terraform-locks"
-}
-
 variable "tags" {
   description = "Common tags for created resources"
   type        = map(string)

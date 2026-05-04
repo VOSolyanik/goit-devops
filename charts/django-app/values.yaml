@@ -1,6 +1,6 @@
 image:
   repository: 451790114144.dkr.ecr.us-east-1.amazonaws.com/devops-final-project-ecr
-  tag: v1.0.2
+  tag: v1.0.3
   pullPolicy: IfNotPresent
 
 # Initial replica count — must match autoscaling.minReplicas when HPA is enabled
@@ -40,19 +40,6 @@ config:
   POSTGRES_DB: django_db
 
 secrets:
-  djangoSecretKey: "change-me-in-production"
-  postgresPassword: "change-me-in-production"
+  djangoSecretKey: ""
+  postgresPassword: ""
 
-# PostgreSQL — official postgres:17 image (no Bitnami subchart)
-postgresql:
-  enabled: false
-
-postgres:
-  image: postgres:17-alpine
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 250m
-      memory: 384Mi

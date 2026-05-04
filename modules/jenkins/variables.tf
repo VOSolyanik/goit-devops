@@ -22,15 +22,9 @@ variable "service_account_name" {
 }
 
 variable "storage_class_name" {
-  description = "Default StorageClass name for Jenkins PVC"
+  description = "Name for the EBS StorageClass created in the cluster"
   type        = string
   default     = "ebs-sc"
-}
-
-variable "storage_size" {
-  description = "Persistent volume size for Jenkins controller"
-  type        = string
-  default     = "10Gi"
 }
 
 variable "admin_secret_name" {
