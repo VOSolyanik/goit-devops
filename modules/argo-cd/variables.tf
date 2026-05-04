@@ -30,7 +30,7 @@ variable "gitops_chart_path" {
 variable "gitops_target_revision" {
   description = "Git revision (branch or tag) for Argo CD to track"
   type        = string
-  default     = "final-project"
+  default     = "main"
 }
 
 variable "application_name" {
