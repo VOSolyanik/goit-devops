@@ -185,6 +185,8 @@ aws secretsmanager get-secret-value --secret-id jenkins/admin \
 
 6. Expected stages: `Checkout` → `SAST: Bandit` → `Security scan: Trivy` → `Resolve ECR coordinates` → `Build and push image (Kaniko)` → `Bump Helm values and push`
 
+![Jenkins](screenshot/01_jenkins.png)
+
 ---
 
 ## Verify Argo CD
@@ -202,6 +204,8 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 ```
 
 Application `django-app` should show **Synced** and **Healthy**.
+
+![Argo CD — django-app Synced and Healthy](screenshot/02_argo.png)
 
 ---
 
@@ -221,6 +225,8 @@ Open `http://localhost:3000`, login `admin` / your `grafana/admin` secret passwo
 
 The **Node Exporter Full** dashboard (ID 1860) is pre-imported. The Prometheus data source is pre-configured at `http://prometheus-server.monitoring.svc:80`.
 
+![Grafana — Node Exporter Full dashboard](screenshot/03_grafana.png)
+
 **Prometheus:**
 
 ```bash
@@ -228,6 +234,8 @@ kubectl port-forward svc/prometheus-server 9090:80 -n monitoring
 ```
 
 Open `http://localhost:9090` to run PromQL queries directly.
+
+![Prometheus — Target health, all targets UP](screenshot/04_prometheus.png)
 
 ---
 
