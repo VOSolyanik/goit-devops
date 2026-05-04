@@ -1,6 +1,6 @@
 image:
   repository: 451790114144.dkr.ecr.us-east-1.amazonaws.com/devops-final-project-ecr
-  tag: v1.0.2
+  tag: v1.0.3
   pullPolicy: IfNotPresent
 
 # Initial replica count — must match autoscaling.minReplicas when HPA is enabled
