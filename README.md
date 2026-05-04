@@ -14,7 +14,7 @@ Full DevOps infrastructure on AWS: VPC, EKS, ECR, RDS, Jenkins, Argo CD, Prometh
 | `modules/vpc` | VPC, subnets, IGW, NAT gateway |
 | `modules/eks` | EKS cluster + managed node group + EBS CSI driver |
 | `modules/ecr` | ECR repository |
-| `modules/s3-backend` | S3 bucket + DynamoDB for Terraform state |
+| `modules/s3-backend` | S3 bucket for Terraform state (native S3 locking) |
 | `modules/rds` | RDS / Aurora (switchable via `rds_use_aurora`) |
 | `modules/jenkins` | Jenkins Helm release + IRSA for `jenkins-sa` (ECR) |
 | `modules/argo-cd` | Argo CD Helm release + local applications chart |
@@ -78,7 +78,7 @@ flowchart LR
 
 ## Prerequisites
 
-- **Terraform** `>= 1.6`
+- **Terraform** `>= 1.10`
 - **AWS CLI** with permissions for EKS, EC2, IAM, ECR, S3, Secrets Manager
 - **kubectl** and **Helm** (for verifying releases)
 - **GitHub PAT** with `repo` scope (Jenkins Git push step)
@@ -108,7 +108,7 @@ aws secretsmanager create-secret \
 
 ### Bootstrap S3 state backend (first run only)
 
-The S3 bucket and DynamoDB table must exist before Terraform can use them as a backend. Comment out `backend.tf`, bootstrap, then re-enable:
+The S3 bucket must exist before Terraform can use it as a backend. Comment out `backend.tf`, bootstrap, then re-enable:
 
 ```bash
 # 0. Clear stale provider cache if re-deploying after a destroy
@@ -183,7 +183,7 @@ aws secretsmanager get-secret-value --secret-id jenkins/admin \
 
 5. **Build Now** — first run loads pipeline parameters and will fail. Use **Build with Parameters** from the second run.
 
-6. Expected stages: `Checkout` → `SAST: Bandit` → `Security scan: Trivy` → `Resolve ECR coordinates` → `Build and push image (Kaniko)` → `Bump Helm values and push`
+6. Expected stages: `Checkout` → `SAST: Bandit` → `Security scan: Trivy` → `Resolve ECR coordinates` → `Build and push image (Kaniko)` → `Trivy: image scan` → `Bump Helm values and push`
 
 ![Jenkins](screenshot/01_jenkins.png)
 
@@ -245,10 +245,11 @@ Every Jenkins build runs two security scan stages before Kaniko:
 
 | Stage | Tool | What it scans |
 |-------|------|--------------|
-| `SAST: Bandit (Python)` | [Bandit](https://bandit.readthedocs.io) | Django source for SQLi, hardcoded secrets, insecure calls |
+| `SAST: Bandit (Python)` | [Bandit](https://bandit.readthedocs.io) | Django source for SQLi, hardcoded secrets, insecure calls (informational — `--exit-zero`) |
 | `Security scan: Trivy` | [Trivy](https://aquasecurity.github.io/trivy) | `trivy fs` — Python deps + Dockerfile CVEs; `trivy config` — Terraform + K8s YAML misconfigurations |
+| `Trivy: image scan` | [Trivy](https://aquasecurity.github.io/trivy) | Built container image in ECR — OS packages and layer CVEs |
 
-Both stages use `--exit-code 0` / `--exit-zero` (informational). To enforce a hard gate, change to `--exit-code 1` / remove `--exit-zero` in `Jenkinsfile`.
+Trivy stages fail the build on **CRITICAL** findings (`--exit-code 1 --severity CRITICAL`). HIGH and below are informational. Bandit is informational only.
 
 ### Trivy findings from first CI run
 
@@ -260,6 +261,7 @@ Findings from `trivy config` on the full workspace. Fixed and accepted findings 
 |----|----------|----------|-------------|
 | DS-0002 | HIGH | `django/Dockerfile` | Added `USER appuser` — container no longer runs as root |
 | AWS-0031 | HIGH | `modules/ecr/ecr.tf` | Set `image_tag_mutability = "IMMUTABLE"` — prevents tag overwrite |
+| AWS-0080 | HIGH | `modules/rds/rds.tf` | Added `storage_encrypted = true` — RDS data at rest is now encrypted |
 
 #### Accepted (not fixed)
 
@@ -268,7 +270,6 @@ Findings from `trivy config` on the full workspace. Fixed and accepted findings 
 | AWS-0039 | HIGH | `modules/eks/eks.tf` | EKS secret envelope encryption requires a KMS key, which adds cost and IAM complexity beyond the scope of this project |
 | AWS-0040 | CRITICAL | `modules/eks/eks.tf` | `endpoint_public_access = true` is required so `kubectl` can reach the cluster from a local workstation; disabling it would require a bastion host or VPN |
 | AWS-0041 | CRITICAL | `modules/eks/eks.tf` | `public_access_cidrs = ["0.0.0.0/0"]` is intentional for the same reason — locking to a single IP would break the course setup for anyone not on a static IP |
-| AWS-0080 | HIGH | `modules/rds/rds.tf` | RDS storage encryption requires a KMS key; not justified for a disposable lab instance with no real data |
 | AWS-0104 | CRITICAL | `modules/rds/shared.tf` | Unrestricted egress on the RDS security group — outbound traffic from a database inside a private VPC subnet poses minimal risk and is the default AWS pattern |
 | AWS-0132 | HIGH | `modules/s3-backend/s3.tf` | S3 state bucket uses AES256 (SSE-S3). A customer-managed KMS key (SSE-KMS) would add rotation and audit controls but is unnecessary cost overhead for a Terraform state backend in a learning project |
 | AWS-0164 | HIGH | `modules/vpc/vpc.tf` | `map_public_ip_on_launch = true` on public subnets is required — the NAT gateway and load balancer need public IPs; removing this would break internet connectivity for the cluster |
@@ -297,11 +298,14 @@ To switch to Aurora: set `rds_use_aurora = true` in `variables.tf` (or pass via 
 
 ## Cleanup
 
+The S3 state bucket has `prevent_destroy = true`. Remove it first, then destroy:
+
 ```bash
+# 1. Remove prevent_destroy from modules/s3-backend/s3.tf, then:
 terraform destroy -auto-approve
 ```
 
-This also destroys the S3 bucket and DynamoDB table. On next deploy, start from the **Bootstrap** step above.
+On next deploy, start from the **Bootstrap** step above.
 
 ---
 
@@ -348,10 +352,16 @@ terraform apply -auto-approve
 ```
 
 ### Stale state lock after a killed `terraform apply`
-A killed apply leaves a DynamoDB lock. The next run fails with `Error acquiring the state lock`. Copy the lock ID from the error and force-unlock:
+A killed apply may leave an S3 native lock file. The next run fails with `Error acquiring the state lock`. Force-unlock using the lock ID from the error:
 
 ```bash
 terraform force-unlock -force <LOCK_ID>
+```
+
+If `force-unlock` doesn't work, delete the lock object directly:
+
+```bash
+aws s3 rm s3://goit-devops-final-project-tfstate-451790114144/final-project/terraform.tfstate.tflock
 ```
 
 ### Alertmanager PVC AZ affinity conflict on second node
@@ -363,4 +373,4 @@ kubectl delete pod prometheus-alertmanager-0 -n monitoring
 ```
 
 ### Prometheus Helm release times out while nodes are scaling
-The default Helm timeout (5 min) is too short when pods are waiting for a second EKS node to join. `modules/monitoring/monitoring.tf` sets `timeout = 900` (15 min) to handle this. If you still see `context deadline exceeded`, re-run `terraform apply` — Prometheus is likely already Running.
+The default Helm timeout (5 min) is too short when pods are waiting for a second EKS node to join. `modules/monitoring/prometheus.tf` sets `timeout = 1800` (30 min) to handle this. If you still see `context deadline exceeded`, re-run `terraform apply` — Prometheus is likely already Running.
